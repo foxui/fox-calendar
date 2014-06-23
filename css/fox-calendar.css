@@ -1,0 +1,51 @@
+fox-calendar {
+	background: #fff;
+	color: #161616;
+}
+.fox-calendar-week-header {
+	height: 24px;
+	line-height: 24px;
+	display: -webkit-box;
+	-webkit-box-orient: horizontal;
+	background: #f8f8f8;
+	border-bottom: 1px solid #d7d7d7;
+	box-shadow: 0px 2px 5px #f8f8f8;
+}
+.fox-calendar-week-item {
+	-webkit-box-flex: 1.0;
+	text-align: center;
+	font-size: 10px;
+}
+.fox-calendar-month-detail{
+	margin-top: 20px;
+}
+.fox-calendar-month-detail .fox-calendar-row {
+	display: -webkit-box;
+	color: #000;
+}
+.fox-calendar-month-detail .fox-calendar-col {
+	-webkit-box-flex: 1.0;
+	width: 0px;
+	text-align: center;
+	height: 44px;
+	font-size: 14px;
+	line-height: 44px;
+	border-bottom: 1px solid #ccc;
+}
+.fox-calendar-col.clear{
+	border: none;
+}
+.fox-calendar-detail-content {
+	height: 0px;
+	-webkit-box-flex: 1.0;
+	overflow: hidden;
+}
+.fox-calendar-detail {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}

@@ -1,0 +1,228 @@
+<fox-element name="fox-calendar">
+
+    <fox-template>
+        <fox-tmpl id="detail-tmpl" style="display: none;">
+            <div class="fox-calendar-month-detail">
+                <div class="fox-calendar-row">
+                    <div class="fox-calendar-col"  rv-each-col="month">
+                        {col}
+                    </div>
+                </div>
+                <div class="fox-calendar-row" rv-each-row="list">
+                    <div class="fox-calendar-col" rv-each-col="row">
+                        {col}
+                    </div>
+                </div>
+            </div>
+        </fox-tmpl>
+
+        <div>
+            <div class="fox-calendar-detail">
+                <div class="fox-calendar-week-header">
+                    <div class="fox-calendar-week-item">
+                        日
+                    </div>
+                    <div class="fox-calendar-week-item">
+                        一
+                    </div>
+                    <div class="fox-calendar-week-item">
+                        二
+                    </div>
+                    <div class="fox-calendar-week-item">
+                        三
+                    </div>
+                    <div class="fox-calendar-week-item">
+                        四
+                    </div>
+                    <div class="fox-calendar-week-item">
+                        五
+                    </div>
+                    <div class="fox-calendar-week-item">
+                        六
+                    </div>
+                </div>
+                <div class="fox-calendar-detail-content" id="fox-calendar-detail-content">
+                    <div class="fox-calendar-detail-scroller" id="fox-calendar-detail-scroller">
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </fox-template>
+
+    <script>
+		function Calendar(el) {
+
+			function daysInMonth(month, year) {
+				return new Date(year, month, 0).getDate();
+			}
+
+			function weekInMonth(month, year) {
+				return new Date(year, month - 1, 1).getDay();
+			}
+			
+			
+            var prev,next;
+
+			this.createDetail = function(year, month) {
+			    
+				var list = [];
+				var monthArr = [];
+				list.push([]);
+				for (var i = 0; i < weekInMonth(month, year); i++) {
+					list[0].push("");
+				}
+
+				for (var i = 0; i < 7; i++) {
+					if (i == weekInMonth(month, year)) {
+						monthArr.push(month +"月");
+					} else {
+						monthArr.push("");
+					}
+
+				}
+				for (var i = 1; i <= daysInMonth(month, year); i++) {
+					var arr = list[list.length - 1];
+					if (arr.length > 6) {
+						arr = [];
+						list.push(arr);
+					}
+					arr.push(i);
+				}
+				for (var i = list[list.length - 1].length; i < 7; i++) {
+					list[list.length - 1].push("");
+				}
+
+				el.$['detail-tmpl'].list = list;
+                el.$['detail-tmpl'].month = monthArr;
+				return $(el.$['detail-tmpl']).clone(true).show();
+			}
+			
+			
+			
+			this.createDetailPrev = function(year,month){
+			    if(!prev){
+                    prev = {
+                        year:year,
+                        month:month
+                    }
+                }
+                
+			    
+			    prev.month --;
+			    if(prev.month < 0){
+			        prev.year --;
+			        prev.month = 12;
+			    }
+			    $(el.$['fox-calendar-detail-scroller']).prepend(this.createDetail(prev.year,prev.month));
+			}
+			this.createDetailNext = function(year,month){
+			    if(!next){
+                    next = {
+                        year:year,
+                        month:month
+                    }
+                }
+               
+                next.month ++;
+                if(next.month > 12){
+                    next.year ++;
+                    next.month = 1;
+                }
+                $(el.$['fox-calendar-detail-scroller']).append(this.createDetail(next.year,next.month));
+            }
+            
+            this.initScroll = function(){
+                var scroller = el.$['fox-calendar-detail-scroller'];
+                function translateDom(dist, speed) {
+                    scroller.style.webkitTransitionTimingFunction = "cubic-bezier(0.33, 0.66, 0.66, 1)";
+                    scroller.style.webkitTransitionDuration = speed + 'ms';
+                    scroller.style.webkitTransform = 'translate3d(0,' + dist + 'px,0)';
+                }
+                var content = el.$['fox-calendar-detail-content'];
+                var startY,translateY,time,moveTimer;
+                content.addEventListener("touchstart",function(e){
+                    translateY = 0;
+                    time = e.timeStamp;
+                    var transform = /translate3d\(0px, (.*)px,/ .exec(scroller.style.webkitTransform);
+                    if(transform){
+                        translateY = parseInt(transform[1]);
+                    }
+                    startY = e.touches[0].pageY
+                    
+                },true);
+                content.addEventListener("touchmove",function(e){
+                    
+                   moveTimer = setTimeout(function(e){
+                       
+                       
+                   },100);
+                    var deltaY = e.touches[0].pageY-startY;
+                    // console.info(deltaY,translateY)
+                    translateDom(deltaY+translateY,0);
+                },true);
+                content.addEventListener("touchend",function(e){
+                    
+                    var deltaY =  e.changedTouches[0].pageY-startY;
+                    
+                    var v = deltaY/(e.timeStamp-time);
+                    
+                    console.info(v);
+                    
+                    var dir = v > 0 ? -1 : 1;
+                    
+                    var deceleration = dir*0.0006;  
+                    
+                    var duration = Math.abs( v / deceleration); 
+                   
+                    
+                    translateDom(deltaY*2+translateY,duration);
+                    
+                    // translateDom(deltaY+translateY+deltaY,1000);
+                   /*
+                    var deltaY = e.changedTouches[0].pageY;
+                                      console.info(deltaY,translateY);
+                                       translateDom(-deltaY,500);*/
+                   
+                    
+                },true);
+            }
+            
+            
+		}
+
+		fox("fox-calendar", {
+			lifecycle : {
+				created : function() {
+					this.calendar = new Calendar(this);
+					for(var i = 0;i<20;i++){
+					   this.calendar.createDetailNext(2014,6); 
+					   this.calendar.createDetailPrev(2014,6);     
+					}
+					var self = this;
+				    this.calendar.initScroll();
+					
+					/*
+					this.calendar.bindScrollEnd(function(content){
+										   console.info(content.scrollHeight,content.scrollTop,$(content).height());
+											if(content.scrollTop<300){
+												self.calendar.createDetailPrev(2014,6); 
+												self.calendar.createDetailPrev(2014,6); 
+											} 
+											var count = (content.scrollHeight/8-(content.scrollHeight-content.scrollTop-$(content).height()))/250;
+											console.info(count);
+											for(var i = 0;i<count;i++){
+												self.calendar.createDetailNext(2014,6); 
+											}
+																					  });*/
+					
+					
+					
+				}
+			}
+		});
+
+    </script>
+</fox-element>
