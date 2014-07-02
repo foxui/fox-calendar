@@ -1,58 +1,59 @@
+<link rel="import" href="../../fox-icon/dist/fox-icon.html"/>
+
 <fox-element name="fox-calendar">
 
-    <fox-template>
-        <fox-tmpl id="detail-tmpl" style="display: none;">
-            <div class="fox-calendar-month-detail">
-                <div class="fox-calendar-row">
-                    <div class="fox-calendar-col"  rv-each-col="month">
-                        {col}
-                    </div>
-                </div>
-                <div class="fox-calendar-row" rv-each-row="list">
-                    <div class="fox-calendar-col" rv-each-col="row">
-                        {col}
-                    </div>
-                </div>
-            </div>
-        </fox-tmpl>
+	<tpl>
+		<div class="fox-calendar-detail">
+			<div class="fox-calendar-toolbar">
+				<button class="fox-calendar-cancel">Cancel</button>
+				<button class="fox-calendar-set">Set</button>
+			</div>
+			<div class="fox-calendar-selector">
+				<div class="fox-calendar-selector-left">
+					<fox-icon id="btn_prev_month" icon="icon-left-nav"></fox-icon>
+					<label>{month}月</label>
+					<fox-icon id="btn_next_month" icon="icon-right-nav"></fox-icon>
+				</div>
+				<div class="fox-calendar-selector-right">
+					<fox-icon id="btn_prev_year" icon="icon-left-nav"></fox-icon>
+					<label>{year}年</label>
+					<fox-icon id="btn_next_year" icon="icon-right-nav"></fox-icon>
+				</div>
+			</div>
+			<div class="fox-calendar-week-header">
+				<div class="fox-calendar-week-item">
+					日
+				</div>
+				<div class="fox-calendar-week-item">
+					一
+				</div>
+				<div class="fox-calendar-week-item">
+					二
+				</div>
+				<div class="fox-calendar-week-item">
+					三
+				</div>
+				<div class="fox-calendar-week-item">
+					四
+				</div>
+				<div class="fox-calendar-week-item">
+					五
+				</div>
+				<div class="fox-calendar-week-item">
+					六
+				</div>
+			</div>
+			<div class="fox-calendar-month-detail">
+				<div class="fox-calendar-row" rv-each-row="list">
+					<div class="fox-calendar-col" rv-each-col="row">
+						{col}
+					</div>
+				</div>
+			</div>
+		</div>
+	</tpl>
 
-        <div>
-            <div class="fox-calendar-detail">
-                <div class="fox-calendar-week-header">
-                    <div class="fox-calendar-week-item">
-                        日
-                    </div>
-                    <div class="fox-calendar-week-item">
-                        一
-                    </div>
-                    <div class="fox-calendar-week-item">
-                        二
-                    </div>
-                    <div class="fox-calendar-week-item">
-                        三
-                    </div>
-                    <div class="fox-calendar-week-item">
-                        四
-                    </div>
-                    <div class="fox-calendar-week-item">
-                        五
-                    </div>
-                    <div class="fox-calendar-week-item">
-                        六
-                    </div>
-                </div>
-                <div class="fox-calendar-detail-content" id="fox-calendar-detail-content">
-                    <div class="fox-calendar-detail-scroller" id="fox-calendar-detail-scroller">
-                        
-                        
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </fox-template>
-
-    <script>
+	<script>
 		function Calendar(el) {
 
 			function daysInMonth(month, year) {
@@ -63,26 +64,37 @@
 				return new Date(year, month - 1, 1).getDay();
 			}
 			
+			var self = this;
 			
-            var prev,next;
+			$(el.$['btn_next_month']).bind('click',function(){
+				self.createNextMonth();
+			});
+			
+			$(el.$['btn_prev_month']).bind('click',function(){
+				self.createPrevMonth();
+			});
+			
+			$(el.$['btn_prev_year']).bind('click',function(){
+				self.createPrevYear();
+			});
+			
+			$(el.$['btn_next_year']).bind('click',function(){
+				self.createNextYear();
+			});
+			
+			var _year,_month;
 
-			this.createDetail = function(year, month) {
-			    
+			this.create = function(year, month) {
+				_year = year;
+				_month = month;
 				var list = [];
-				var monthArr = [];
 				list.push([]);
-				for (var i = 0; i < weekInMonth(month, year); i++) {
-					list[0].push("");
+			
+				for (var i = 0,l=weekInMonth(month, year),j = daysInMonth(month-1,year); i < l; i++) {
+					list[0].push(j-(l-i-1));
 				}
 
-				for (var i = 0; i < 7; i++) {
-					if (i == weekInMonth(month, year)) {
-						monthArr.push(month +"月");
-					} else {
-						monthArr.push("");
-					}
-
-				}
+				
 				for (var i = 1; i <= daysInMonth(month, year); i++) {
 					var arr = list[list.length - 1];
 					if (arr.length > 6) {
@@ -94,135 +106,50 @@
 				for (var i = list[list.length - 1].length; i < 7; i++) {
 					list[list.length - 1].push("");
 				}
-
-				el.$['detail-tmpl'].list = list;
-                el.$['detail-tmpl'].month = monthArr;
-				return $(el.$['detail-tmpl']).clone(true).show();
-			}
+				el.year = year;
+				el.month = month;
+				el.list = list;
+			};
 			
+			this.createNextMonth = function(){
+				_month++;
+				if(_month>12){
+					_month = 1;
+					_year++;
+				}
+				this.create(_year,_month);
+			};
 			
+			this.createPrevMonth = function(){
+				_month--;
+				if(_month == 0){
+					_month = 12;
+					_year--;
+				}
+				this.create(_year,_month);
+			};
 			
-			this.createDetailPrev = function(year,month){
-			    if(!prev){
-                    prev = {
-                        year:year,
-                        month:month
-                    }
-                }
-                
-			    
-			    prev.month --;
-			    if(prev.month < 0){
-			        prev.year --;
-			        prev.month = 12;
-			    }
-			    $(el.$['fox-calendar-detail-scroller']).prepend(this.createDetail(prev.year,prev.month));
-			}
-			this.createDetailNext = function(year,month){
-			    if(!next){
-                    next = {
-                        year:year,
-                        month:month
-                    }
-                }
-               
-                next.month ++;
-                if(next.month > 12){
-                    next.year ++;
-                    next.month = 1;
-                }
-                $(el.$['fox-calendar-detail-scroller']).append(this.createDetail(next.year,next.month));
-            }
-            
-            this.initScroll = function(){
-                var scroller = el.$['fox-calendar-detail-scroller'];
-                function translateDom(dist, speed) {
-                    scroller.style.webkitTransitionTimingFunction = "cubic-bezier(0.33, 0.66, 0.66, 1)";
-                    scroller.style.webkitTransitionDuration = speed + 'ms';
-                    scroller.style.webkitTransform = 'translate3d(0,' + dist + 'px,0)';
-                }
-                var content = el.$['fox-calendar-detail-content'];
-                var startY,translateY,time,moveTimer;
-                content.addEventListener("touchstart",function(e){
-                    translateY = 0;
-                    time = e.timeStamp;
-                    var transform = /translate3d\(0px, (.*)px,/ .exec(scroller.style.webkitTransform);
-                    if(transform){
-                        translateY = parseInt(transform[1]);
-                    }
-                    startY = e.touches[0].pageY
-                    
-                },true);
-                content.addEventListener("touchmove",function(e){
-                    
-                   moveTimer = setTimeout(function(e){
-                       
-                       
-                   },100);
-                    var deltaY = e.touches[0].pageY-startY;
-                    // console.info(deltaY,translateY)
-                    translateDom(deltaY+translateY,0);
-                },true);
-                content.addEventListener("touchend",function(e){
-                    
-                    var deltaY =  e.changedTouches[0].pageY-startY;
-                    
-                    var v = deltaY/(e.timeStamp-time);
-                    
-                    console.info(v);
-                    
-                    var dir = v > 0 ? -1 : 1;
-                    
-                    var deceleration = dir*0.0006;  
-                    
-                    var duration = Math.abs( v / deceleration); 
-                   
-                    
-                    translateDom(deltaY*2+translateY,duration);
-                    
-                    // translateDom(deltaY+translateY+deltaY,1000);
-                   /*
-                    var deltaY = e.changedTouches[0].pageY;
-                                      console.info(deltaY,translateY);
-                                       translateDom(-deltaY,500);*/
-                   
-                    
-                },true);
-            }
-            
-            
+			this.createNextYear = function(){
+				_year++;
+				this.create(_year,_month);
+			};
+			
+			this.createPrevYear = function(){
+				_year--;	
+				this.create(_year,_month);
+			};
+			
 		}
 
 		fox("fox-calendar", {
 			lifecycle : {
 				created : function() {
 					this.calendar = new Calendar(this);
-					for(var i = 0;i<20;i++){
-					   this.calendar.createDetailNext(2014,6); 
-					   this.calendar.createDetailPrev(2014,6);     
-					}
-					var self = this;
-				    this.calendar.initScroll();
-					
-					/*
-					this.calendar.bindScrollEnd(function(content){
-										   console.info(content.scrollHeight,content.scrollTop,$(content).height());
-											if(content.scrollTop<300){
-												self.calendar.createDetailPrev(2014,6); 
-												self.calendar.createDetailPrev(2014,6); 
-											} 
-											var count = (content.scrollHeight/8-(content.scrollHeight-content.scrollTop-$(content).height()))/250;
-											console.info(count);
-											for(var i = 0;i<count;i++){
-												self.calendar.createDetailNext(2014,6); 
-											}
-																					  });*/
-					
-					
+					this.calendar.create(2014, 6);
 					
 				}
 			}
 		});
 
-    </script>
+	</script>
 </fox-element>
