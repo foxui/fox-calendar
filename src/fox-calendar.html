@@ -4,12 +4,12 @@
 
 	<tpl>
 		<div class="fox-calendar-detail" id="fox-calendar-container">
-			<div class="fox-calendar-toolbar">
+			<div class="fox-calendar-toolbar" id="fox-calendar-toolbar">
 				<button class="fox-calendar-cancel" id="fox-calendar-cancel">
-					Cancel
+					取消
 				</button>
 				<button class="fox-calendar-set" id="fox-calendar-set" disabled="disabled">
-					Set
+					选取
 				</button>
 			</div>
 			<div class="fox-calendar-selector">
@@ -68,23 +68,69 @@
 			function weekInMonth(month, year) {
 				return new Date(year, month - 1, 1).getDay();
 			}
+			
+			var minDate,maxDate;
 
 			var self = this;
+			
+			function isInRange(date){
+				if(minDate && date.getTime()<minDate.getTime()){
+					return false;
+				}else if(maxDate && date.getTime()>maxDate.getTime()){
+					return false;
+				}
+				return true;
+			}
+			
+			function updateSelect(year,month){
+				if(minDate && year-1<minDate.getFullYear()){
+					$btnPrevYear.addClass("disable");
+				}else{
+					$btnPrevYear.removeClass("disable");
+				}
+				
+				if(minDate && month-2<minDate.getMonth()){
+					$btnPrevMonth.addClass("disable");
+				}else{
+					$btnPrevMonth.removeClass("disable");
+				}
+				
+				if(maxDate && year+1>maxDate.getFullYear()){
+					$btnNextYear.addClass("disable");
+				}else{
+					$btnNextYear.removeClass("disable");
+				}
+				
+				if(maxDate && month>maxDate.getMonth()){
+					$btnNextMonth.addClass("disable");
+				}else{
+					$btnNextMonth.removeClass("disable");
+				}
+				
+			}
 
-			$(el.$['btn_next_month']).bind('click', function() {
-				self.createNextMonth();
+			var $btnNextMonth = $(el.$['btn_next_month']).bind('click', function() {
+				if(!$(this).hasClass("disable")){
+					self.createNextMonth();
+				}
 			});
 
-			$(el.$['btn_prev_month']).bind('click', function() {
-				self.createPrevMonth();
+			var $btnPrevMonth = $(el.$['btn_prev_month']).bind('click', function() {
+				if(!$(this).hasClass("disable")){
+					self.createPrevMonth();
+				}
 			});
 
-			$(el.$['btn_prev_year']).bind('click', function() {
-				self.createPrevYear();
+			var $btnPrevYear = $(el.$['btn_prev_year']).bind('click', function() {
+				if(!$(this).hasClass("disable")){
+					self.createPrevYear();
+				}
 			});
 
-			$(el.$['btn_next_year']).bind('click', function() {
-				self.createNextYear();
+			var $btnNextYear = $(el.$['btn_next_year']).bind('click', function() {
+				if(!$(this).hasClass("disable")){
+					self.createNextYear();
+				}
 			});
 
 			var _year, _month;
@@ -99,14 +145,17 @@
 				$(this).addClass("active");
 				lastCol = this;
 				lastDate = new Date(_year+"-"+_month+"-"+$(this).data("val"));
-				
+				if(!$(el.$['fox-calendar-toolbar']).hasClass("active")){
+					$(el.$['fox-calendar-set']).click();
+				}
 			});
 
 			$(el).delegate(".fox-calendar-col.prev", "click", function() {
-				self.createPrevMonth();
+				$btnPrevMonth.click();
 			});
 			$(el).delegate(".fox-calendar-col.next", "click", function() {
-				self.createNextMonth();
+				
+				$btnNextMonth.click();
 			});
 
 			$(el.$['fox-calendar-cancel']).bind("click", function() {
@@ -121,6 +170,7 @@
 			});
 
 			this.create = function(year, month) {
+				updateSelect(year,month);
 				lastCol && $(lastCol).removeClass("active");
 				_year = year;
 				_month = month;
@@ -135,10 +185,15 @@
 				}
 
 				for (var i = 1; i <= daysInMonth(month, year); i++) {
-					var active = "";
+					var active = "",type = "normal";
 					if (lastDate && lastDate.getFullYear() == year && lastDate.getMonth()+1 == month && lastDate.getDate() == i) {
 						active = "active";
 					}
+					
+					if(!isInRange(new Date(year,month-1,i))){
+						type = "disable";
+					}
+					
 					var arr = list[list.length - 1];
 					if (arr.length > 6) {
 						arr = [];
@@ -146,7 +201,7 @@
 					}
 					arr.push({
 						"val" : i,
-						"type" : "normal " + active
+						"type" : type+" " + active
 					});
 				}
 
@@ -171,7 +226,16 @@
 				el.month = month;
 				el.list = list;
 			};
-
+			
+			
+			
+			this.setMinDate = function(date){
+				minDate = date;
+			};
+			this.setMaxDate = function(date){
+				maxDate = date;
+			};
+			
 			this.createNextMonth = function() {
 				_month++;
 				if (_month > 12) {
@@ -199,6 +263,10 @@
 				_year--;
 				this.create(_year, _month);
 			};
+			
+			this.setControl = function(hasControl){
+				$(el.$['fox-calendar-toolbar']).addClass(hasControl?"active":"");
+			};
 
 		}
 
@@ -222,11 +290,15 @@
 				"close" : function() {
 					var self = this;
 					$(this).removeClass("active");
-					/*
-					$(this.$['fox-calendar-container']).bind("webkitTransitionEnd", function() {
-											$(self).remove();
-										});*/
-					
+				},
+				"setControl":function(hasControl){
+					this.calendar.setControl(hasControl);
+				},
+				"setMinDate":function(date){
+					this.calendar.setMinDate(date);
+				},
+				"setMaxDate":function(date){
+					this.calendar.setMaxDate(date);
 				},
 				"fireSelectEvent":function(date){
 					xtag.fireEvent(this, 'select', {
@@ -241,21 +313,26 @@
 
 			param = $.extend({
 				"display" : "inline",
-				"format" : "yyyy-HH-mm",
-				"date" : new Date()
+				"format" : "YYYY-MM-DD",
+				"date" : new Date(),
+				"minDate":null,
+				"maxDate":null,
+				"hasControl":true
 			}, param);
 
 			if (param.display == "bottom") {
-				if(param.el.tagName=="INPUT"){
-					$(param.el).attr("readonly","readonly");
-				}
+				$(param.el).attr("readonly","readonly");
+				
 				$(param.el).bind("click", function() {
 					
 					var self = this;
 					var calendar = this.calendar; 
 					if(!calendar){
 						calendar = document.createElement("fox-calendar");
-						calendar.init(param.date);	
+						calendar.setMinDate(param.minDate);
+						calendar.setMaxDate(param.maxDate);
+						calendar.setControl(param.hasControl);
+						calendar.init(param.date);
 						$('body').append(calendar);
 						this.calendar = calendar;
 					}

@@ -132,7 +132,7 @@ fox-calendar.bottom.active .fox-calendar-detail{
 .fox-calendar-toolbar .fox-calendar-set {
 	text-align: right;
 }
-.fox-calendar-col.prev,.fox-calendar-col.next{
+.fox-calendar-col.prev,.fox-calendar-col.next,.fox-calendar-col.disable{
 	opacity: 0.5;
 }
 .fox-calendar-col-inner{
@@ -148,4 +148,12 @@ fox-calendar.bottom.active .fox-calendar-detail{
 	color:#fff;
 	
 }
-
+.fox-calendar-selector fox-icon.disable{
+	opacity: 0.5;
+}
+.fox-calendar-toolbar{
+	display:none;
+}
+.fox-calendar-toolbar.active{
+	display: -webkit-box;
+}
