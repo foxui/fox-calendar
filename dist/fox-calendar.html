@@ -1,0 +1,364 @@
+<link rel="import" href="../../fox-icon/dist/fox-icon.html"/>
+<link rel="stylesheet" href="css/fox-calendar.css">
+<fox-element name="fox-calendar" attributes="format input hasControl now display">
+
+	<tpl>
+		<div class="fox-calendar-detail" id="fox-calendar-container">
+			<div class="fox-calendar-toolbar" id="fox-calendar-toolbar">
+				<button class="fox-calendar-cancel" id="fox-calendar-cancel">
+					取消
+				</button>
+				<button class="fox-calendar-set" id="fox-calendar-set">
+					选取
+				</button>
+			</div>
+			<div class="fox-calendar-selector">
+				<div class="fox-calendar-selector-left">
+					<fox-icon id="btn_prev_month" icon="icon-left-nav"></fox-icon>
+					<label>{month}月</label>
+					<fox-icon id="btn_next_month" icon="icon-right-nav"></fox-icon>
+				</div>
+				<div class="fox-calendar-selector-right">
+					<fox-icon id="btn_prev_year" icon="icon-left-nav"></fox-icon>
+					<label>{year}年</label>
+					<fox-icon id="btn_next_year" icon="icon-right-nav"></fox-icon>
+				</div>
+			</div>
+			<div class="fox-calendar-week-header">
+				<div class="fox-calendar-week-item">
+					日
+				</div>
+				<div class="fox-calendar-week-item">
+					一
+				</div>
+				<div class="fox-calendar-week-item">
+					二
+				</div>
+				<div class="fox-calendar-week-item">
+					三
+				</div>
+				<div class="fox-calendar-week-item">
+					四
+				</div>
+				<div class="fox-calendar-week-item">
+					五
+				</div>
+				<div class="fox-calendar-week-item">
+					六
+				</div>
+			</div>
+			<div class="fox-calendar-month-detail">
+				<div class="fox-calendar-row" rv-each-row="list">
+					<div class="fox-calendar-col" rv-data-val="col.val" rv-class="col.type" rv-each-col="row">
+						<span class="fox-calendar-col-inner"> {col.val} </span>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</tpl>
+	<script src="lib/moment.min.js"></script>
+	<script>
+		function Calendar(el) {
+
+			function daysInMonth(month, year) {
+				return new Date(year, month, 0).getDate();
+			}
+
+			function weekInMonth(month, year) {
+				return new Date(year, month - 1, 1).getDay();
+			}
+			
+			var minDate,maxDate;
+
+			var self = this;
+			
+			function isInRange(date){
+				if(minDate && date.getTime()<minDate.getTime()){
+					return false;
+				}else if(maxDate && date.getTime()>maxDate.getTime()){
+					return false;
+				}
+				return true;
+			}
+			
+			function updateSelect(year,month){
+				if(minDate && year-1<minDate.getFullYear()){
+					$btnPrevYear.addClass("disable");
+				}else{
+					$btnPrevYear.removeClass("disable");
+				}
+				
+				if(minDate && month-2<minDate.getMonth()){
+					$btnPrevMonth.addClass("disable");
+				}else{
+					$btnPrevMonth.removeClass("disable");
+				}
+				
+				if(maxDate && year+1>maxDate.getFullYear()){
+					$btnNextYear.addClass("disable");
+				}else{
+					$btnNextYear.removeClass("disable");
+				}
+				
+				if(maxDate && month>maxDate.getMonth()){
+					$btnNextMonth.addClass("disable");
+				}else{
+					$btnNextMonth.removeClass("disable");
+				}
+				
+			}
+
+			var $btnNextMonth = $(el.$['btn_next_month']).bind('click', function() {
+				if(!$(this).hasClass("disable")){
+					self.createNextMonth();
+				}
+			});
+
+			var $btnPrevMonth = $(el.$['btn_prev_month']).bind('click', function() {
+				if(!$(this).hasClass("disable")){
+					self.createPrevMonth();
+				}
+			});
+
+			var $btnPrevYear = $(el.$['btn_prev_year']).bind('click', function() {
+				if(!$(this).hasClass("disable")){
+					self.createPrevYear();
+				}
+			});
+
+			var $btnNextYear = $(el.$['btn_next_year']).bind('click', function() {
+				if(!$(this).hasClass("disable")){
+					self.createNextYear();
+				}
+			});
+
+			var _year, _month;
+
+			var lastCol, lastDate;
+
+			$(el).delegate(".fox-calendar-col.normal", "click", function() {
+				$(el.$['fox-calendar-set']).removeAttr("disabled");
+				$(".fox-calendar-col.active",el).removeClass("active");
+				$(this).addClass("active");
+				lastDate = new Date(_year,_month-1,$(this).data("val"));
+				if(!$(el.$['fox-calendar-toolbar']).hasClass("active")){
+					$(el.$['fox-calendar-set']).click();
+				}
+			});
+
+			$(el).delegate(".fox-calendar-col.prev", "click", function() {
+				$btnPrevMonth.click();
+			});
+			$(el).delegate(".fox-calendar-col.next", "click", function() {
+				
+				$btnNextMonth.click();
+			});
+
+			$(el.$['fox-calendar-cancel']).bind("click", function() {
+				el.close();
+			});
+
+			$(el.$['fox-calendar-set']).bind("click", function() {
+				if(lastDate){
+					el.close();
+					el.fireSelectEvent(lastDate);
+				}
+			});
+			
+			this.setLastDate = function(date){
+				lastDate = date;
+			};
+
+			this.create = function(year, month) {
+				updateSelect(year,month);
+				$(".fox-calendar-col.active",el).removeClass("active");
+				_year = year;
+				_month = month;
+				var list = [];
+				list.push([]);
+
+				for (var i = 0, l = weekInMonth(month, year), j = daysInMonth(month - 1, year); i < l; i++) {
+					list[0].push({
+						"val" : j - (l - i - 1),
+						"type" : "prev"
+					});
+				}
+
+				for (var i = 1; i <= daysInMonth(month, year); i++) {
+					var active = "",type = "normal";
+					if (lastDate && lastDate.getFullYear() == year && lastDate.getMonth()+1 == month && lastDate.getDate() == i) {
+						active = "active";
+					}
+					
+					if(!isInRange(new Date(year,month-1,i))){
+						type = "disable";
+					}
+					
+					var arr = list[list.length - 1];
+					if (arr.length > 6) {
+						arr = [];
+						list.push(arr);
+					}
+					arr.push({
+						"val" : i,
+						"type" : type+" " + active
+					});
+				}
+
+				var count = 0;
+
+				list.forEach(function(arr) {
+					count += arr.length;
+				});
+
+				for (var i = count, j = 1; i < 42; i++, j++) {
+					var arr = list[list.length - 1];
+					if (arr.length > 6) {
+						arr = [];
+						list.push(arr);
+					}
+					arr.push({
+						"val" : j,
+						"type" : "next"
+					});
+				}
+				el.year = year;
+				el.month = month;
+				el.list = list;
+			};
+			
+			
+			this.update = function(){
+				this.create(_year,_month);
+			};
+			
+			this.setMinDate = function(date){
+				
+				minDate = date;
+				if(date && (date.getMonth()+1>_month||date.getFullYear()>_year)){
+					this.create(date.getFullYear(),date.getMonth()+1);
+				}else{
+					this.update();
+				}
+			};
+			this.setMaxDate = function(date){
+				maxDate = date;
+				if(date && (date.getMonth()+1<_month||date.getFullYear()<_year)){
+					this.create(date.getFullYear(),date.getMonth()+1);
+				}else{
+					this.update();
+				}
+			};
+			
+			this.createNextMonth = function() {
+				_month++;
+				if (_month > 12) {
+					_month = 1;
+					_year++;
+				}
+				this.create(_year, _month);
+			};
+
+			this.createPrevMonth = function() {
+				_month--;
+				if (_month == 0) {
+					_month = 12;
+					_year--;
+				}
+				this.create(_year, _month);
+			};
+
+			this.createNextYear = function() {
+				_year++;
+				this.create(_year, _month);
+			};
+
+			this.createPrevYear = function() {
+				_year--;
+				this.create(_year, _month);
+			};
+			
+			this.setControl = function(hasControl){
+				$(el.$['fox-calendar-toolbar']).addClass(hasControl==="true"?"active":"");
+			};
+
+		}
+
+		fox("fox-calendar", {
+			lifecycle : {
+				created : function() {
+					var self = this;
+					this.format = this.format || "YYYY-MM-DD";
+					this.now = this.now ||  moment().format(this.format);
+					this.hasControl = this.hasControl || "false";
+					this.display = this.display || "bottom";
+					this.calendar = new Calendar(this);
+					$(function(){
+						self.bind();
+					});
+					
+					this.init();
+				}
+				
+			},
+			methods : {
+				"bind":function(){
+					var self = this;
+					var $input = $(document.getElementById(this.input)).bind("click",function(){
+						self.show();
+					}).attr("readonly","readonly");
+					$(this).bind("select",function(e){
+						var val = "";
+						if(typeof self.format == "string"){
+							val = moment(e.detail).format(self.format);
+						}else if(typeof self.format == "function"){
+							val = param.format(e.detail);
+						}
+						$input.val(val);
+					});
+					
+				},
+				"init":function(){
+					var date = this.getDate();
+					$(this).addClass(this.display);
+					// this.calendar.setLastDate(date);
+					this.calendar.setControl(this.hasControl);
+					this.calendar.create(date.getFullYear(), date.getMonth()+1);
+					
+				},
+				"getDate":function(){
+					return moment(this.now,this.format).toDate();
+				},
+				"show" : function() {
+					var self = this;
+					setTimeout(function() {
+						$(self).addClass("active");
+					}, 0);
+
+				},
+				"close" : function() {
+					var self = this;
+					$(this).removeClass("active");
+				},
+				"setControl":function(hasControl){
+					this.calendar.setControl(hasControl);
+				},
+				"setMinDate":function(date){
+					this.calendar.setMinDate(date);
+				},
+				"setMaxDate":function(date){
+					this.calendar.setMaxDate(date);
+				},
+				"fireSelectEvent":function(date){
+					xtag.fireEvent(this, 'select', {
+						'detail' : date
+					});
+				}
+			}
+		});
+
+		
+
+	</script>
+</fox-element>
