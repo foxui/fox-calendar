@@ -1,15 +1,18 @@
 fox-calendar {
-	display:block;
+	display:none;
 	background: #fff;
 	color: #161616;
 }
-
+fox-calendar.inline{
+	display:block;
+}
 fox-calendar.bottom.active{
 	visibility: visible;
 	background-color: rgba(0, 0, 0, 0.5);
 }
 
 fox-calendar.bottom{
+	display:block;
 	position: fixed;
 	left: 0;
 	top: 0;

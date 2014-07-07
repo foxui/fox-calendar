@@ -26,9 +26,9 @@
     </head>
     <body>
 
-		<fox-calendar id="calendar1" input="range2" format="YYYY-MM-DD" hasControl="true" display="bottom"></fox-calendar>
+		<fox-calendar id="calendar1" input="range1"  format="YYYY-MM-DD" hasControl="false" display="bottom"></fox-calendar>
 		
-		<fox-calendar id="calendar2" input="range1" format="YYYY-MM-DD" hasControl="true" display="bottom"></fox-calendar>
+		<fox-calendar id="calendar2" input="range2"  format="YYYY-MM-DD" hasControl="true" display="bottom"></fox-calendar>
 		
 		<input type="text" id="range1"/>
 		
@@ -36,7 +36,13 @@
         
         <script>
         	window.addEventListener('HTMLImportsLoaded', function(e) {
+        		var calendar1 = $("#calendar1").bind("select",function(e){
+        			calendar2.setMinDate(e.detail);
+        		}).get(0);
         		
+        		var calendar2 = $("#calendar2").bind("select",function(e){
+        			calendar1.setMaxDate(e.detail);
+        		}).get(0);
         		
         	},false);
         	

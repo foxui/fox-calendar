@@ -26,22 +26,9 @@
     </head>
     <body>
 
-		<input type="text" value="2013-02-01" id="hehe"/>
-        
-        <script>
-        	window.addEventListener('HTMLImportsLoaded', function(e) {
-        		var date = new Date();
-        		var calendar = new fox.ui.calendar({
-	        		"el":$("#hehe").get(0),
-	        		"display":"bottom",
-	        		"format":"YYYY-MM-DD",
-	        		"minDate": new Date(date.getFullYear(), date.getMonth(), date.getDate()-10),
-                	"maxDate": new Date(date.getFullYear(), date.getMonth(), date.getDate()+10),
-                	"hasControl":true
-	        	});
-        	},false);
-        	
-        </script>
+		<input type="text" id="date"/>
+        <fox-calendar id="calendar1" input="date" format="YYYY-MM-DD" hasControl="true" display="bottom"></fox-calendar>
+       
 
     </body>
 </html>

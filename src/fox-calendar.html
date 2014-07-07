@@ -1,6 +1,6 @@
 <link rel="import" href="../../fox-icon/dist/fox-icon.html"/>
 <link rel="stylesheet" href="css/fox-calendar.css">
-<fox-element name="fox-calendar">
+<fox-element name="fox-calendar" attributes="format input hasControl now display">
 
 	<tpl>
 		<div class="fox-calendar-detail" id="fox-calendar-container">
@@ -8,7 +8,7 @@
 				<button class="fox-calendar-cancel" id="fox-calendar-cancel">
 					取消
 				</button>
-				<button class="fox-calendar-set" id="fox-calendar-set" disabled="disabled">
+				<button class="fox-calendar-set" id="fox-calendar-set">
 					选取
 				</button>
 			</div>
@@ -139,12 +139,9 @@
 
 			$(el).delegate(".fox-calendar-col.normal", "click", function() {
 				$(el.$['fox-calendar-set']).removeAttr("disabled");
-				if (lastCol) {
-					$(lastCol).removeClass("active");
-				}
+				$(".fox-calendar-col.active",el).removeClass("active");
 				$(this).addClass("active");
-				lastCol = this;
-				lastDate = new Date(_year+"-"+_month+"-"+$(this).data("val"));
+				lastDate = new Date(_year,_month-1,$(this).data("val"));
 				if(!$(el.$['fox-calendar-toolbar']).hasClass("active")){
 					$(el.$['fox-calendar-set']).click();
 				}
@@ -168,10 +165,14 @@
 					el.fireSelectEvent(lastDate);
 				}
 			});
+			
+			this.setLastDate = function(date){
+				lastDate = date;
+			};
 
 			this.create = function(year, month) {
 				updateSelect(year,month);
-				lastCol && $(lastCol).removeClass("active");
+				$(".fox-calendar-col.active",el).removeClass("active");
 				_year = year;
 				_month = month;
 				var list = [];
@@ -279,7 +280,7 @@
 			};
 			
 			this.setControl = function(hasControl){
-				$(el.$['fox-calendar-toolbar']).addClass(hasControl?"active":"");
+				$(el.$['fox-calendar-toolbar']).addClass(hasControl==="true"?"active":"");
 			};
 
 		}
@@ -287,12 +288,47 @@
 		fox("fox-calendar", {
 			lifecycle : {
 				created : function() {
+					var self = this;
+					this.format = this.format || "YYYY-MM-DD";
+					this.now = this.now ||  moment().format(this.format);
+					this.hasControl = this.hasControl || "false";
+					this.display = this.display || "bottom";
 					this.calendar = new Calendar(this);
+					$(function(){
+						self.bind();
+					});
+					
+					this.init();
 				}
+				
 			},
 			methods : {
-				"init":function(date){
+				"bind":function(){
+					var self = this;
+					var $input = $(document.getElementById(this.input)).bind("click",function(){
+						self.show();
+					}).attr("readonly","readonly");
+					$(this).bind("select",function(e){
+						var val = "";
+						if(typeof self.format == "string"){
+							val = moment(e.detail).format(self.format);
+						}else if(typeof self.format == "function"){
+							val = param.format(e.detail);
+						}
+						$input.val(val);
+					});
+					
+				},
+				"init":function(){
+					var date = this.getDate();
+					$(this).addClass(this.display);
+					// this.calendar.setLastDate(date);
+					this.calendar.setControl(this.hasControl);
 					this.calendar.create(date.getFullYear(), date.getMonth()+1);
+					
+				},
+				"getDate":function(){
+					return moment(this.now,this.format).toDate();
 				},
 				"show" : function() {
 					var self = this;
@@ -322,70 +358,7 @@
 			}
 		});
 
-		fox.ui = fox.ui || {};
-		fox.ui.calendar = function(param) {
-			var self = this;
-			param = $.extend({
-				"display" : "inline",
-				"format" : "YYYY-MM-DD",
-				"date" : new Date(),
-				"minDate":null,
-				"maxDate":null,
-				"hasControl":false,
-				"onselect":function(){}
-			}, param);
-			
-			this.calendar = document.createElement("fox-calendar");
-			this.setMinDate(param.minDate);
-			this.setMaxDate(param.maxDate);
-			this.setControl(param.hasControl);
-			this.calendar.init(param.date);
-			this.onselect(param.onselect);
-			$(this.calendar).addClass(param.display);
-			
-			if (param.display == "bottom") {
-				$('body').append(this.calendar);
-				$(param.el).attr("readonly","readonly");
-				
-				$(param.el).bind("click", function() {
-					
-					$(self.calendar).bind("select",function(e){
-						var val = "";
-						
-						if(typeof param.format == "string"){
-							val = moment(e.detail).format(param.format);
-						}else if(typeof param.format == "function"){
-							val = param.format(e.detail);
-						}
-						$(param.el).val(val);
-					});
-					self.calendar.show();
-				});
-			}else if(param.display == "inline"){
-				$(param.el).append(this.calendar);
-				this.calendar.setControl(false);
-			}
-
-		};
-		fox.ui.calendar.prototype = {
-			"setMinDate":function(date){
-				this.calendar.setMinDate(date);
-			},
-			"setMaxDate":function(date){
-				this.calendar.setMaxDate(date);
-			},
-			"setControl":function(hasControl){
-				this.calendar.setControl(hasControl);
-			},
-			"show":function(){
-				this.calendar.show();
-			},
-			"onselect":function(callback){
-				$(this.calendar).bind("select",function(e){
-					callback&&callback(e.detail);
-				});
-			}
-		};
+		
 
 	</script>
 </fox-element>
