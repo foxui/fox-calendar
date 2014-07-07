@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
         <link rel="stylesheet" href="../../fox-core/dist/foxui.css"/>
        
-        <!-- 2. Load the component using an HTML Import -->
+        
         <style>
 			* {
 				margin: 0;
@@ -15,18 +15,29 @@
 			
         </style>
         <script src="../../fox-core/dist/foxui.js"></script>
-        <script src="../../fox-core/src/rivets_extend.js"></script>
+        <script src="../../fox-core/src/register.js"></script>
         <link rel="import" href="../src/fox-calendar.html">
+        <script src="fastclick.js"></script>
+        <script>
+        	$(function() {
+			    FastClick.attach(document.body);
+			});
+        </script>
     </head>
     <body>
 
-		<input type="text" id="hehe"/>
+		<fox-calendar id="calendar1" input="range2" format="YYYY-MM-DD" hasControl="true" display="bottom"></fox-calendar>
+		
+		<fox-calendar id="calendar2" input="range1" format="YYYY-MM-DD" hasControl="true" display="bottom"></fox-calendar>
+		
+		<input type="text" id="range1"/>
+		
+		<input type="text" id="range2"/>
         
         <script>
         	window.addEventListener('HTMLImportsLoaded', function(e) {
-        		fox.ui.calendar({
-	        		"el":$("#hehe").get(0)
-	        	});
+        		
+        		
         	},false);
         	
         </script>

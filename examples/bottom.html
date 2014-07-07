@@ -31,13 +31,13 @@
         <script>
         	window.addEventListener('HTMLImportsLoaded', function(e) {
         		var date = new Date();
-        		fox.ui.calendar({
+        		var calendar = new fox.ui.calendar({
 	        		"el":$("#hehe").get(0),
 	        		"display":"bottom",
 	        		"format":"YYYY-MM-DD",
 	        		"minDate": new Date(date.getFullYear(), date.getMonth(), date.getDate()-10),
                 	"maxDate": new Date(date.getFullYear(), date.getMonth(), date.getDate()+10),
-                	"hasControl":false
+                	"hasControl":true
 	        	});
         	},false);
         	

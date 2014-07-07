@@ -228,12 +228,26 @@
 			};
 			
 			
+			this.update = function(){
+				this.create(_year,_month);
+			};
 			
 			this.setMinDate = function(date){
+				
 				minDate = date;
+				if(date && (date.getMonth()+1>_month||date.getFullYear()>_year)){
+					this.create(date.getFullYear(),date.getMonth()+1);
+				}else{
+					this.update();
+				}
 			};
 			this.setMaxDate = function(date){
 				maxDate = date;
+				if(date && (date.getMonth()+1<_month||date.getFullYear()<_year)){
+					this.create(date.getFullYear(),date.getMonth()+1);
+				}else{
+					this.update();
+				}
 			};
 			
 			this.createNextMonth = function() {
@@ -310,45 +324,67 @@
 
 		fox.ui = fox.ui || {};
 		fox.ui.calendar = function(param) {
-
+			var self = this;
 			param = $.extend({
 				"display" : "inline",
 				"format" : "YYYY-MM-DD",
 				"date" : new Date(),
 				"minDate":null,
 				"maxDate":null,
-				"hasControl":true
+				"hasControl":false,
+				"onselect":function(){}
 			}, param);
-
+			
+			this.calendar = document.createElement("fox-calendar");
+			this.setMinDate(param.minDate);
+			this.setMaxDate(param.maxDate);
+			this.setControl(param.hasControl);
+			this.calendar.init(param.date);
+			this.onselect(param.onselect);
+			$(this.calendar).addClass(param.display);
+			
 			if (param.display == "bottom") {
+				$('body').append(this.calendar);
 				$(param.el).attr("readonly","readonly");
 				
 				$(param.el).bind("click", function() {
 					
-					var self = this;
-					var calendar = this.calendar; 
-					if(!calendar){
-						calendar = document.createElement("fox-calendar");
-						calendar.setMinDate(param.minDate);
-						calendar.setMaxDate(param.maxDate);
-						calendar.setControl(param.hasControl);
-						calendar.init(param.date);
-						$('body').append(calendar);
-						this.calendar = calendar;
-					}
-					$(calendar).addClass(param.display).bind("select",function(e){
+					$(self.calendar).bind("select",function(e){
 						var val = "";
+						
 						if(typeof param.format == "string"){
 							val = moment(e.detail).format(param.format);
 						}else if(typeof param.format == "function"){
 							val = param.format(e.detail);
 						}
-						$(self).val(val);
+						$(param.el).val(val);
 					});
-					calendar.show();
+					self.calendar.show();
 				});
+			}else if(param.display == "inline"){
+				$(param.el).append(this.calendar);
+				this.calendar.setControl(false);
 			}
 
+		};
+		fox.ui.calendar.prototype = {
+			"setMinDate":function(date){
+				this.calendar.setMinDate(date);
+			},
+			"setMaxDate":function(date){
+				this.calendar.setMaxDate(date);
+			},
+			"setControl":function(hasControl){
+				this.calendar.setControl(hasControl);
+			},
+			"show":function(){
+				this.calendar.show();
+			},
+			"onselect":function(callback){
+				$(this.calendar).bind("select",function(e){
+					callback&&callback(e.detail);
+				});
+			}
 		};
 
 	</script>
